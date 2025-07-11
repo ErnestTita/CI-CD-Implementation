@@ -1,0 +1,49 @@
+version: 2.1
+
+executors:
+  node_docker:
+    docker:
+      - image: cimg/node:18.18.0
+
+jobs:
+  install_deps:
+    executor: node_docker
+    steps:
+      - checkout
+      - run: npm ci
+
+  lint:
+    executor: node_docker
+    steps:
+      - checkout
+      - run: npm ci
+      - run: npm run lint
+
+  test:
+    executor: node_docker
+    steps:
+      - checkout
+      - run: npm ci
+      - run: npm test
+
+  build_docker:
+    docker:
+      - image: cimg/base:stable
+    steps:
+      - checkout
+      - setup_remote_docker
+      - run:
+          name: Build Docker image
+          command: docker build -t my-app:latest .
+
+workflows:
+  version: 2
+  ci_pipeline:
+    jobs:
+      - install_deps
+      - lint:
+          requires: [install_deps]
+      - test:
+          requires: [install_deps]
+      - build_docker:
+          requires: [lint, test]

@@ -31,14 +31,22 @@ jobs:
       - run:
           name: Build Docker image
           command: |
-            docker build -t ${DOCKER_LOGIN}/bootcamp-project-2:${CIRCLE_SHA1} .
-            docker build -t ${DOCKER_LOGIN}/bootcamp-project-2:latest .
+            if [ -z "$DOCKER_LOGIN" ]; then
+              echo "DOCKER_LOGIN environment variable is not set"
+              exit 1
+            fi
+            docker build -t $DOCKER_LOGIN/bootcamp-project-2:$CIRCLE_SHA1 .
+            docker build -t $DOCKER_LOGIN/bootcamp-project-2:latest .
       - run:
           name: Push to Docker Hub
           command: |
-            echo ${DOCKER_PASSWORD} | docker login -u ${DOCKER_LOGIN} --password-stdin
-            docker push ${DOCKER_LOGIN}/bootcamp-project-2:${CIRCLE_SHA1}
-            docker push ${DOCKER_LOGIN}/bootcamp-project-2:latest
+            if [ -z "$DOCKER_LOGIN" ] || [ -z "$DOCKER_PASSWORD" ]; then
+              echo "Docker Hub credentials not set"
+              exit 1
+            fi
+            echo $DOCKER_PASSWORD | docker login -u $DOCKER_LOGIN --password-stdin
+            docker push $DOCKER_LOGIN/bootcamp-project-2:$CIRCLE_SHA1
+            docker push $DOCKER_LOGIN/bootcamp-project-2:latest
 
 workflows:
   version: 2
